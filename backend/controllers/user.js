@@ -5,7 +5,7 @@ require('dotenv').config();
 const User = require('../models/user');
 
 exports.signup = (req, res, next) => {
-  const regexPassword   = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const regexPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
   if (!regexPassword.test(req.body.password)) {
     return res.status(400).json({ 'message': 'Le mot de passe doit contenir au moins une majuscule et un caractère spécial' });
@@ -23,6 +23,9 @@ exports.signup = (req, res, next) => {
           .catch(error => res.status(400).json({ error }));
       })
       .catch(error => res.status(500).json({ error }));
+      if(req.status(404)) {
+      return json({'message': 'introuvable'});
+    }
   };
   exports.login = (req, res, next) => {
     User.findOne({ email: req.body.email })

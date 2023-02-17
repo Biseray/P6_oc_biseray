@@ -4,5 +4,5 @@
 npm-debug.log
 yarn-error.log
 /images
-/mongoose.js
 /.env
+/.env-dist.txt

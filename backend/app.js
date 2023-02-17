@@ -13,7 +13,6 @@ const userRoutes = require('./routes/user');
 
  
 mongoose.connect((process.env.MONGOOSE),
-    console.log(process.env.MONGOOSE),
 
 
     {
