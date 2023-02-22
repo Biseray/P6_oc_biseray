@@ -20,13 +20,14 @@ exports.signup = (req, res, next) => {
         });
         user.save()
           .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-          .catch(error => res.status(400).json({ error }));
+          .catch(() => res.status(400).json({  message: 'introuvable'}));
       })
-      .catch(error => res.status(500).json({ error }));
-      if(req.status(404)) {
-      return json({'message': 'introuvable'});
-    }
+   
+   
   };
+
+
+
   exports.login = (req, res, next) => {
     User.findOne({ email: req.body.email })
         .then(user => {
@@ -46,6 +47,7 @@ exports.signup = (req, res, next) => {
                           
                           {expiresIn: '24h'}  
                         )
+
                     });
                 })
                 .catch(error => res.status(500).json({ error }));
