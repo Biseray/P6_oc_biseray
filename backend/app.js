@@ -15,7 +15,7 @@ const userRoutes = require('./routes/user');
 
 const limiter = rateLimiter({
      windowMs: 15 * 60 * 1000,
-    max: 4,
+    max: 10,
     standardHeaders: true,
     legacyHeaders: false,
     message:"trop de tentative veuillez réessayer dans 15 minutes",

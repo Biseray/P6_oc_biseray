@@ -15,16 +15,10 @@ exports.createSauce = (req, res, next) => {
     return;
   }
 
-  if (!sauceObject.name || !sauceObject.manufacturer || !sauceObject.description || !sauceObject.mainPepper) {
-    fs.unlink(req.file.path, () => {
-      res.status(400).json({ error: 'Tous les champs doivent être renseignés' });
-    });
-    return;
-  }
 
   if (sauceObject.name.trim().length === 0 || sauceObject.manufacturer.trim().length === 0 || sauceObject.description.trim().length === 0 || sauceObject.mainPepper.trim().length === 0) {
     fs.unlink(req.file.path, () => {
-      res.status(400).json({ error: 'Tous les champs doivent être renseignés' });
+      res.status(400).json({ error: 'Les champs suivants doivent être renseignés: ' + (sauceObject.name.trim().length === 0 ? 'Nom, ' : '') + (sauceObject.manufacturer.trim().length === 0 ? 'Fabricant, ' : '') + (sauceObject.description.trim().length === 0 ? 'Description, ' : '') + (sauceObject.mainPepper.trim().length === 0 ? 'Ingrédient principal' : '') });
     });
     return;
   }
@@ -70,7 +64,7 @@ exports.getOneSauce = (req, res, next) => {
   ).catch(
     (error) => {
       res.status(404).json({
-        'message': 'produit introuvable'
+        message: 'produit introuvable'
       });
     }
   );
@@ -89,19 +83,23 @@ exports.modifySauce = (req, res, next) => {
     return res.status(404).json({ message: 'Veuillez choisir un nombre entre 1 et 10' });
   }
 
-
-  if (!sauceObject.name || !sauceObject.manufacturer || !sauceObject.description || !sauceObject.mainPepper) {
-    return res.status(400).json({ error: 'Tous les champs doivent être renseignés ' });
-  }
-
   if (sauceObject.name.trim().length === 0 || sauceObject.manufacturer.trim().length === 0 || sauceObject.description.trim().length === 0 || sauceObject.mainPepper.trim().length === 0) {
-    return res.status(400).json({ error: 'Tous les champs doivent être renseignés' });
+    fs.unlink(req.file.path, () => {
+      res.status(400).json({ error: 'Les champs suivants doivent être renseignés: ' + (sauceObject.name.trim().length === 0 ? 'Nom, ' : '') + (sauceObject.manufacturer.trim().length === 0 ? 'Fabricant, ' : '') + (sauceObject.description.trim().length === 0 ? 'Description, ' : '') + (sauceObject.mainPepper.trim().length === 0 ? 'Ingrédient principal' : '') });
+    });
+    return;
   }
 
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       if (sauce.userId != req.auth.userId) {
-        res.status(403).json({ message: 'Not authorized' });
+
+
+
+        fs.unlink(req.file.path, () => {
+          return res.status(403).json({ message: 'Not authorized' });
+        });
+
       } else {
         if (sauceObject.imageUrl !== req.params.imageUrl) {
           const filename = sauce.imageUrl.split('/images/')[1];
@@ -113,12 +111,12 @@ exports.modifySauce = (req, res, next) => {
         Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
 
           .then(() => res.status(200).json({ message: 'Objet modifié!' }))
-          .catch(error => res.status(401).json({ error }));
+          .catch(error => res.status(400).json({ error }));
       }
     })
     .catch((error) => {
       fs.unlink(req.file.path, () => {
-        res.status(400).json({ message: 'produit introuvable' });
+        res.status(404).json({ message: 'produit introuvable' });
       })
     });
 
@@ -135,12 +133,12 @@ exports.deleteSauce = (req, res, next) => {
         fs.unlink(`images/${filename}`, () => {
           Sauce.deleteOne({ _id: req.params.id })
             .then(() => { res.status(200).json({ message: 'Objet supprimé !' }) })
-            .catch(() => res.status(401).json({ mesage: 'produit introuvable' }));
+            .catch(() => res.status(400).json({ mesage: 'impossible de supprimer' }));
         });
       }
     })
     .catch(error => {
-      res.status(500).json({ mesage: 'produit introuvable' });
+      res.status(404).json({ mesage: 'produit introuvable' });
     });
 };
 // route get /api/sauces affiche toute les sauces sur le page daccueil
@@ -168,62 +166,66 @@ exports.createLike = (req, res) => {
       // like
       if (req.body.like === 1) {
         console.log('like');
-        // condition si l'utilisateur a déjà liker 
+        // condition si l'utilisateur a déjà liker renvoie un message derreur 
         if (sauce.usersLiked.includes(req.auth.userId)) {
-          return res.status(400).json({ error: 'Vous avez déjà liké cette sauce' });
+          return res.status(400).json({ message: 'Vous avez déjà liké cette sauce' });
         }
         sauce.likes++;
         sauce.usersLiked.push(req.auth.userId);
-
+        // si lutilisateur a deja dislike la sauce alors on retire son dislike et son id dans les userIdDisliked
         if (sauce.usersDisliked.includes(req.auth.userId)) {
-          sauce.dislikes--;
-          sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(req.auth.userId), 1);
+          return res.status(400).json({ message: 'Retirer votre like pour pouvoir  dislike' });
         }
         sauce.save()
           .then(() => { return res.status(200).json({ message: 'sauce likée' }) })
           .catch(error => { return res.status(401).json({ error }) });
       }
+
+
       // dislike
-
-
-
 
       if (req.body.like === -1) {
         console.log('dislike');
         if (sauce.usersDisliked.includes(req.auth.userId)) {
-          return res.status(400).json({ error: 'Vous avez déjà disliké cette sauce' });
+          return res.status(400).json({ message: 'Vous avez déjà disliké cette sauce' });
         }
         sauce.dislikes++;
         sauce.usersDisliked.push(req.auth.userId);
+
+        // si lutilisateur a deja like la sauce alors on retire son like et son id dans les userIdliked
         if (sauce.usersLiked.includes(req.auth.userId)) {
-          sauce.likes--;
-          sauce.usersLiked.splice(sauce.usersLiked.indexOf(req.auth.userId), 1);
+          return res.status(400).json({ message: 'Retirer votre dislike pour pouvoir like' });
         }
         sauce.save()
           .then(() => { return res.status(200).json({ message: 'sauce dislikée' }) })
-          .catch(error => { return res.status(401).json({ error }) });
+          .catch(error => { return res.status(401).json({ message: 'erreur lors de lajout' }) });
       }
-
 
 
 
       // retirer le  like ou dislike
       if (req.body.like === 0) {
+
+        // / si lutilisateur a deja like la sauce alors on retire son like et son id dans les userIdliked
         if (sauce.usersLiked.includes(req.auth.userId)) {
           sauce.likes--;
           sauce.usersLiked.splice(sauce.usersLiked.indexOf(req.auth.userId), 1);
         }
+        // si lutilisateur a deja dislike la sauce alors on retire son dislike et son id dans les userIdDisliked
         if (sauce.usersDisliked.includes(req.auth.userId)) {
           sauce.dislikes--;
           sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(req.auth.userId), 1);
         }
         sauce.save()
           .then(() => { return res.status(200).json({ message: 'like/dislike retiré' }) })
-          .catch(error => { return res.status(401).json({ error }) });
+          .catch(() => { return res.status(401).json({ message: 'erreur lors de lajout' }) });
       }
-
+      if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ error: "Le corps de la requête est vide" });
+      }
     })
     .catch(() => {
-      return res.status(500).json({ message: 'erreur lors de l\'ajout ' })
+      return res.status(404).json({ message: 'sauces non trouvé ' })
     })
+
 };

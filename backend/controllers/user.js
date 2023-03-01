@@ -10,9 +10,9 @@ exports.signup = (req, res, next) => {
 
   
   if (!regexPassword.test(req.body.password)) {
-    return res.status(400).json({ 'message': 'Le mot de passe doit contenir au moins une majuscule et un caractère spécial' });
+    return res.status(400).json({message: 'le mot de passe doit contenir au minimum 8 caractères, au moins une lettre minuscule et une lettre majuscule, un caractère spécial et un chiffre' });
   }else if(!emailRegex.test(req.body.email)){
-    return res.status(400).json({ 'message': 'l\'email n\'est pas correct veuillez renseigner une adresse valide ' });
+    return res.status(400).json({ message: 'l\'email n\'est pas correct veuillez renseigner une adresse valide ' });
   }
     bcrypt.hash(req.body.password, 10)
       .then(hash => {
