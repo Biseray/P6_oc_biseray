@@ -5,8 +5,10 @@ require('dotenv').config();
 const User = require('../models/user');
 
 exports.signup = (req, res, next) => {
-  const regexPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const regexPassword = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/;
   const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+
+  
   if (!regexPassword.test(req.body.password)) {
     return res.status(400).json({ 'message': 'Le mot de passe doit contenir au moins une majuscule et un caractère spécial' });
   }else if(!emailRegex.test(req.body.email)){
@@ -20,7 +22,7 @@ exports.signup = (req, res, next) => {
         });
         user.save()
           .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-          .catch(() => res.status(400).json({  message: 'introuvable'}));
+          .catch(() => res.status(400).json({  message: 'veuillez utiliser un adresse valide'}));
       })
    
    
@@ -50,7 +52,7 @@ exports.signup = (req, res, next) => {
 
                     });
                 })
-                .catch(error => res.status(500).json({ error }));
+                .catch(() => res.status(401).json({ mesage : ' veuillez vous connecter' }));
         })
-        .catch(error => res.status(500).json({ error }));
+        .catch(() => res.status(401).json({ mesage : ' veuillez vous connecter ' }));
  };
